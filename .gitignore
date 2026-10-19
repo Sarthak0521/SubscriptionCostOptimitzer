@@ -1,6 +1,12 @@
+# Python virtual environment
 .venv/
+venv/
+
+# Python cache
 __pycache__/
 *.py[cod]
+
+# Memory runtime databases
 ta2/memory/data/
 *.sqlite
 *.sqlite3
