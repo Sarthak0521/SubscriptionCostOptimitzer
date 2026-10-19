@@ -1,0 +1,92 @@
+=== TA2 RAG TRACE — Subscription Cost Optimizer ===
+Run at      : 2026-10-19 22:35:55
+Embeddings  : nomic-embed-text
+Chat model  : qwen2.5:3b
+Chunks      : 10 (stored in Chroma: 10)
+  chunk-01: StreamNova Video Plans and Prices
+  chunk-02: StreamNova Annual Billing and Refund Policy
+  chunk-03: StreamNova Cancellation Rules
+  chunk-04: CloudVault Storage Plans and Prices
+  chunk-05: CloudVault Cancellation and Data Retention
+  chunk-06: FitPulse Fitness App Plans and Prices
+  chunk-07: FitPulse Plan Limits and Device Support
+  chunk-08: General Price Change Policy
+  chunk-09: Plan Upgrade and Downgrade Rules
+  chunk-10: Payment Methods and Failed Payments
+
+======================================================================
+R1 single-fact lookup
+======================================================================
+
+Question : How much does the StreamNova Standard plan cost per month?
+k        : 1
+Retrieved:
+  - chunk-01 | StreamNova Video Plans and Prices | distance=0.369
+Answer   : The StreamNova Standard plan costs ₹499 per month. [StreamNova Video Plans and Prices]
+Time     : 21.03 s
+Check    : expected sections retrieved = 1/1; behaviour = answered
+
+Question : How much does the StreamNova Standard plan cost per month?
+k        : 3
+Retrieved:
+  - chunk-01 | StreamNova Video Plans and Prices | distance=0.369
+  - chunk-02 | StreamNova Annual Billing and Refund Policy | distance=0.4972
+  - chunk-03 | StreamNova Cancellation Rules | distance=0.6398
+Answer   : The StreamNova Standard plan costs ₹499 per month. [StreamNova Video Plans and Prices]
+Time     : 8.41 s
+Check    : expected sections retrieved = 1/1; behaviour = answered
+
+======================================================================
+R2 multi-section question (needs k>1)
+======================================================================
+
+Question : How much notice do I need to give to cancel CloudVault, and when does a StreamNova monthly cancellation take effect?
+k        : 1
+Retrieved:
+  - chunk-03 | StreamNova Cancellation Rules | distance=0.3867
+Answer   : I don't know based on the subscription catalogue.
+Time     : 4.8 s
+Check    : expected sections retrieved = 1/2; behaviour = refused (wrong)
+
+Question : How much notice do I need to give to cancel CloudVault, and when does a StreamNova monthly cancellation take effect?
+k        : 3
+Retrieved:
+  - chunk-03 | StreamNova Cancellation Rules | distance=0.3867
+  - chunk-05 | CloudVault Cancellation and Data Retention | distance=0.4021
+  - chunk-02 | StreamNova Annual Billing and Refund Policy | distance=0.6224
+Answer   : To cancel CloudVault, you need to give 30 days of notice. A StreamNova monthly cancellation takes effect at the end of the current billing month. [CloudVault Cancellation and Data Retention, StreamNova Cancellation Rules]
+Time     : 12.2 s
+Check    : expected sections retrieved = 2/2; behaviour = answered
+
+======================================================================
+R3 unanswerable question
+======================================================================
+
+Question : Does FitPulse offer a student discount, and how much is it?
+k        : 1
+Retrieved:
+  - chunk-06 | FitPulse Fitness App Plans and Prices | distance=0.4931
+Answer   : I don't know based on the subscription catalogue.
+Time     : 6.0 s
+Check    : expected sections retrieved = n/a; behaviour = refused (correct)
+
+Question : Does FitPulse offer a student discount, and how much is it?
+k        : 3
+Retrieved:
+  - chunk-06 | FitPulse Fitness App Plans and Prices | distance=0.4931
+  - chunk-07 | FitPulse Plan Limits and Device Support | distance=0.6319
+  - chunk-02 | StreamNova Annual Billing and Refund Policy | distance=0.9634
+Answer   : I don't know based on the subscription catalogue.
+Time     : 7.88 s
+Check    : expected sections retrieved = n/a; behaviour = refused (correct)
+
+======================================================================
+SUMMARY
+======================================================================
+Test  k   Expected hit  Behaviour                           Time(s)  Run OK
+R1    1   1/1           answered                            21.03    True
+R1    3   1/1           answered                            8.41     True
+R2    1   1/2           refused (wrong)                     4.8      True
+R2    3   2/2           answered                            12.2     True
+R3    1   n/a           refused (correct)                   6.0      True
+R3    3   n/a           refused (correct)                   7.88     True
