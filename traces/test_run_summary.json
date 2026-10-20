@@ -1,0 +1,11 @@
+{
+  "executed_at_utc": "2026-10-19T16:51:01.184143+00:00",
+  "command": "python tests/test_member4_safety.py",
+  "exit_code": 0,
+  "unit_tests_passed": 6,
+  "unit_tests_failed": 0,
+  "baseline_vs_extension_cases": 5,
+  "all_baseline_vs_extension_cases_passed": true,
+  "measurement_file": "traces/baseline_vs_extension.csv",
+  "scope": "Deterministic helper-level tests and simulated timeout; no live Ollama end-to-end benchmark was performed."
+}

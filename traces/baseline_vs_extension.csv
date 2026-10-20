@@ -1,0 +1,19 @@
+test,baseline_ms,extension_ms,baseline_pass,extension_pass,baseline_observation,extension_observation
+different_costs_499_vs_699,0.01,0.009,True,True,"Plan A: ₹499.00/month
+Plan B: ₹699.00/month
+Result: Plan A is cheaper by ₹200.00/month.","Plan A: ₹499.00/month
+Plan B: ₹699.00/month
+Result: Plan A is cheaper by ₹200.00/month (₹2400.00/year)."
+equal_costs_500_vs_500,0.004,0.004,True,True,"Plan A: ₹500.00/month
+Plan B: ₹500.00/month
+Result: No difference. Both plans cost the same.","Plan A: ₹500.00/month
+Plan B: ₹500.00/month
+Result: There is no difference between the plans."
+annual_cost_499,0.002,0.002,True,True,"Monthly cost: ₹499.00
+Annual cost: ₹5988.00","Monthly cost: ₹499.00
+Annual cost: ₹5988.00"
+negative_cost_validation,0.002,0.006,True,True,"Monthly cost: ₹-10.00
+Annual cost: ₹-120.00","ValueError: Monthly cost must be a finite, non-negative number."
+simulated_tool_timeout_fallback,0.002,0.009,True,True,"Plan A: ₹499.00/month
+Plan B: ₹699.00/month
+Result: Plan A is cheaper by ₹200.00/month.","(None, {'status': 'failed', 'operation': '<lambda>', 'error_type': 'TimeoutError', 'error': 'simulated timeout', 'elapsed_ms': 0.006})"
