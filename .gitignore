@@ -1,12 +1,7 @@
 .venv/
-venv/
 __pycache__/
 *.py[cod]
+ta2/memory/data/
 *.sqlite
 *.sqlite3
 *.db
-.env
-.env.*
-!.env.example
-ta2/chroma_db/
-.pytest_cache
