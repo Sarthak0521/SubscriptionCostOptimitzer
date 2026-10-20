@@ -9,3 +9,4 @@ __pycache__/
 .env.*
 !.env.example
 ta2/chroma_db/
+.pytest_cache
