@@ -8,7 +8,12 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from ta2.agents.cost_analyst import analyze_cost
 from ta2.agents.plan_evaluator import evaluate_plans
 from ta2.memory_store import get_preference
-
+from ta2.safety import (
+    safe_execute,
+    deterministic_recommendation,
+    human_approval,
+    append_trace,
+)
 
 MAX_HOPS = 3
 
@@ -241,12 +246,14 @@ supervisor = workflow.compile(checkpointer=checkpointer)
 
 
 # 9. Run a subscription comparison.
+
 def optimize_subscription(
     plan_a_cost: float,
     plan_b_cost: float,
     priority: str = "Save money",
-    thread_id: str = "default"
+    thread_id: str = "default",
 ) -> str:
+    # Validate inputs before running any agent.
     if not math.isfinite(plan_a_cost) or not math.isfinite(plan_b_cost):
         raise ValueError("Plan costs must be finite numbers.")
 
@@ -278,18 +285,73 @@ def optimize_subscription(
         "routing_trace": [
             "START: Subscription comparison requested."
         ],
-        "next_agent": ""
+        "next_agent": "",
     }
 
-    result = supervisor.invoke(
+    # Execute the complete graph safely.
+    result, execution = safe_execute(
+        supervisor.invoke,
         initial_state,
         config={
             "configurable": {"thread_id": thread_id},
-            "recursion_limit": 20
-        }
+            "recursion_limit": 20,
+        },
     )
 
-    return result["final_answer"]
+    append_trace(
+        {"event": "agent_execution", **execution},
+        thread_id,
+    )
+
+    if execution["status"] == "success" and result:
+        recommendation = result.get("final_answer", "").strip()
+
+        if not recommendation:
+            execution = {
+                "status": "failed",
+                "operation": "supervisor.invoke",
+                "error": "Supervisor returned an empty recommendation.",
+            }
+            append_trace(
+                {"event": "empty_recommendation", **execution},
+                thread_id,
+            )
+            recommendation = deterministic_recommendation(
+                plan_a_cost, plan_b_cost, priority
+            )
+            append_trace(
+                {"event": "deterministic_fallback"},
+                thread_id,
+            )
+    else:
+        # Deterministic fallback: no LLM needed.
+        recommendation = deterministic_recommendation(
+            plan_a_cost, plan_b_cost, priority
+        )
+        append_trace(
+            {
+                "event": "deterministic_fallback",
+                "reason": execution.get("error", "Agent execution failed"),
+            },
+            thread_id,
+        )
+
+    # Require an explicit human decision for the final recommendation.
+    decision = human_approval(recommendation, thread_id)
+
+    append_trace(
+        {
+            "event": "human_review",
+            "decision": decision,
+        },
+        thread_id,
+    )
+
+    if decision == "approved":
+        return recommendation + "\n\nHuman review: APPROVED."
+
+    return recommendation + "\n\nHuman review: REJECTED. Not approved."
+
 
 
 # 10. Retrieve the previous comparison.

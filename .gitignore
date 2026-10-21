@@ -9,4 +9,6 @@ ta2/memory/data/
 .env.*
 !.env.example
 ta2/chroma_db/
-.pytest_cache
+.pytest_cache/
+# Runtime trace logs
+traces/*.jsonl
